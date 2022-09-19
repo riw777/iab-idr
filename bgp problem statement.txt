@@ -8,8 +8,7 @@ BGP was originally conceived by Yakov Rekhter and Kirk Lougheed in 1989 while si
 -	Peering and route advertisement would take place within a trust-rich environment; peering organizations would have written contracts enforced using filters, and with the ultimate fallback of de-peering
 -	The protocol should be easily extensible to support new use cases as needed
 
-In its original design, BGP was designed to support external peering only; externally learned routes were redistributed into an IGP, and then back into BGP at the other edge of the provider. Internal connectivity was available, but only at a basic level. 
-Over time several capabilities have been added to BGP to support operational requirements.
+In some original BGP deploymnents (for a short period of time), externally learned routes were redistributed into an IGP, and then back into BGP at the other edge of the provider. Internal connectivity was available, but only at a basic level. Over time several capabilities have been added to BGP to support scaling and operational requirements.
 
 First, richer internal connectivity options were added to support much larger operator networks, and then to move towards a more clearly divided underlay/overlay model. The underlay, or IGP, would be used to provide reachability to next hops (or infrastructure routes), while the overlay, BGP, would carry routing information for destinations outside the local autonomous system (or customer routes). This initially included confederations, which were later replaced by route reflectors (and, for internet exchanges, route servers).
 
