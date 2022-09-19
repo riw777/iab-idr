@@ -1,6 +1,6 @@
 Introduction
 
-BGP, originally conceived by Yakov Rechtor and Kirk Lougheed in 1989 while sitting at a bar at the twelfth IETF meeting in Austin Texas. Yakov, in later conversations, continued to be surprised at the longevity of the original protocol, currently in its fourth version. The original design was simple and to the point, including:
+BGP was originally conceived by Yakov Rekhter and Kirk Lougheed in 1989 while sitting at a bar at the twelfth IETF meeting in Austin Texas. Yakov, in later conversations, continued to be surprised at the longevity of the original protocol, currently in its fourth version. The original design was simple and to the point, including:
 
 -	Peering would be over existing IP connections, as interdomain protocols are designed as an overlay
 -	While loop-freeness must be a primary property, local provider policies must be clearly expressible and implementable
@@ -15,47 +15,43 @@ First, richer internal connectivity options were added to support much larger op
 
 Second, additions to the suite of internet protocols (primarily IPv6) resulted in BGP being modified to support address families.
 Third, increasing requirements to steer traffic along specific paths to increase quality of experience (traffic engineering) and provisioning of virtual Ethernet overlays led to a series of extensions supporting MPLS, and more recently SR.
+
 More recently large-scale data-center operators began using BGP as their primary protocol—using BGP both as an overlay and underlay, or as an IGP—because of BGP’s scale characteristics. This has led to increasing requirements in segmentation and virtual Ethernet overlay services and data center fabric operation.
 
-Specifically, BGP is now being modified to support automatic peer discovery, to support next hops without an underling IGP, etc. In some deployments, communities, iBGP versus eBGP behavior and “magic AS numbers” are used to prevent loops when routes are leaked (or redistributed) between virtual topologies.
+Specifically, BGP is now being modified to support automatic peer discovery, to support next hops without an underlying IGP, etc. In some deployments, communities, iBGP versus eBGP behavior and “magic AS numbers” are used to prevent loops when routes are leaked (or redistributed) between virtual topologies. 
 
-These additional features don’t just add to the current capabilities of BGP; they run counter to the original design of the protocol.
-The result is a protocol increasingly complex, difficult to understand, difficult to implement, and difficult to manage. The sections below consider some of the problems with the current generation of BGP. 
-
-
+These additional features don not just add to the current capabilities of BGP; they run counter to the original design of the protocol. Arguably, more and more basic architectural properties of the protocol are being disabled, abused or circumvented to "get the job done whatever the job is declared to be". 
+The result is a protocol of increasingly byzantine complexity full of non-orthogonal "knobs" that partially contradict each other and hence more and more difficult to understand, more and more difficult to implement, and ultimately difficult to manage. The sections below consider some of the problems with the current generation of BGP. 
 
 BGP Code Complexity
 
-In the mid-1990’s one major implementation of BGP had a total of around 40,000 lines of code—including initial support for address families and overlay virtual networks. In the last thirty years, BGP implementations have exploded, with current implementations having a total of around 250,000 lines of code. 
+In the mid-1990’s one major implementation of BGP consisted of a grand total of around 40,000 lines of code—including initial support for address families and overlay virtual networks. In the last thirty years, BGP implementations have exploded, with current implementations easily surpassing 250,000 lines of code. 
 While this increasing code base supports a much wider set of features, it is almost impossible for any single developer to understand the entire scope, purpose, and use case for every feature supported in a code base of this scale.
-A codebase of this scale, combined with the many hundreds (thousands) of use cases for which BGP can be applied—and all the variations of these use cases—make it almost impossible to fully test a complete BGP implementation for correctness. There are bound to be latent defects in a code base of this size that cannot be discovered before having an operational impact, perhaps even causing operator- or internet-scale failures.
 
-
+A codebase of this size, combined with the many hundreds (thousands) of use cases for which BGP can be applied—and all the variations of these use cases—make it almost impossible to fully test a complete BGP implementation for correctness. There are bound to be latent defects in a code base of this girth that cannot be discovered before having an operational impact, perhaps even causing operator- or internet-scale failures.
 
 BGP Deployment Complexity
 
-The documentation for any implementation of BGP runs to thousands of pages; operators must know what they are trying to get done to ask the right questions before they can begin to search documentation for information on how to accomplish a given task. It is impossible, at this point, for an individual engineer to learn BGP in any meaningful way from documentation.
-BGP deployment is conceivably completely different for each broad class of use case. Inter-provider communication requires a different configuration model than BGP as an IGP in a data center underlay, or BGP supporting an overlay of virtual topologies, or providing cloud connectivity, etc. Very few engineers have wide enough experience to encounter BGP in all these situations; saying a particular person “knows BGP” is no longer a useful description of the operator’s knowledge. 
-Using a default of configuration from one use case in another can cause network outages.
-
-
-
+The documentation for any implementation of BGP can run to thousands of pages; operators must know what they are trying to get done to ask the right questions before they can even begin to search documentation for information on how to accomplish a given task. It is impossible, at this point, for an individual engineer to learn BGP in any meaningful way from documentation alone.
+BGP deployment is conceivably completely different for each broad class of use cases. Inter-provider communication requires a different configuration model than BGP as an IGP in a data center underlay, or BGP supporting an overlay of virtual topologies, or providing cloud connectivity, or emulating L2 substrate, etc. Very few engineers have wide enough experience to encounter BGP in all these situations; saying a particular person “knows BGP” is no longer a useful description of the operator’s knowledge. 
+Using a default configuration applicable to a class of use cases in another can cause network outages.
 
 BGP is not Stable
+
 It has been widely documented that the Default-Free Zone (DFZ), or the global Internet routing table does not converge. See, for instance, Geoff Huston’s measurements in this post: https://www.potaroo.net/ispcol/2022-01/bgpupd2021.html.
-There is a widespread impression that the constant state of convergence in the DFZ is directly attributable to the global number of routes. There is no reason, however, that a routing system with a lot of routes should not converge. Rather, the instability observed in the global routing table is because the rate of change in the global routing table is faster than BGP converges, combined with several BGP-specific policy interactions.
+There is a widespread impression that the constant state of convergence in the DFZ is directly attributable to the global number of routes. There is no reason, however, that a routing system with a lot of routes should not converge. Rather, the instability observed in the global routing table is because the rate of change in the global routing table is faster than BGP converges, combined with several BGP-specific policy interactions as well as non uniform tie-breaking across different configurations and implementations. 
 
 BGP converges for reasons other than changes in reachability or path, adding to the frequency of convergence events in the DFZ. For instance, BGP sends updates when a policy changes, even if the policy change does not impact the path to the reachable destination. Further there are situations where BGP can build a “wedgie,” as described in RFC4264, and can also persistently oscillate between multiple paths, as described in RFC7964.
 
-(see also https://rule11.tech/bgp-persistent-oscillation/ for an explanation of persistent oscillations in BGP).
+(see also https://rule11.tech/bgp-persistent-oscillation/ for an explanation of persistent oscillations in BGP). 
 
-While various conditions cause BGP to converge more often than would normally be required, BGP is also notoriously slow to converge. A general rule of thumb is to subtract the length of the current best AS path from the length of the next possible best path (in the case of a withdraw, the maximum AS path length in the network), and multiply this number by the Minimum Route Advertisement Interval.
+This is largely the legacy of BGP breaking the total ordering of paths by introduction of MED. This trend continues with more and more "optional" path tie-breakers introduced by RFCs as well as vendors in their implementations. 
+
+While various conditions cause BGP to converge more often than would normally be required, BGP is also notoriously slow to converge. A general rule of thumb is to subtract the length of the current best AS path from the length of the next possible best path (in the case of a withdraw, the maximum AS path length in the network), and multiply this number by the Minimum Route Advertisement Interval. However, this is not necessarily BGP's fault as a protocol, a diffused computation suffers inherently from processing delays at every node. Also, to enhance stability at scale, it is often necessary to use "state compression" or hysteresis in advertisements. 
 
 Given these parameters, BGP normally requires tens of seconds to converge on route changes in the DFZ. These relatively long convergence times, combined with many different reasons for route changes, leads to a situation where constant churn is the normal mode of operation. 
 
 Constantly churning networks are harder to understand, secure, and troubleshoot. A constantly converging network is always triggering timers and processes designed to increase stability during rapid changes.
-
-
 
 BGP is Insecure
 
