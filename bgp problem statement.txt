@@ -35,7 +35,7 @@ The documentation for any implementation of BGP can run to thousands of pages; o
 BGP deployment is conceivably completely different for each broad class of use cases. Inter-provider communication requires a different configuration model than BGP as an IGP in a data center underlay, or BGP supporting an overlay of virtual topologies, or providing cloud connectivity, or emulating L2 substrate, etc. Very few engineers have wide enough experience to encounter BGP in all these situations; saying a particular person “knows BGP” is no longer a useful description of the operator’s knowledge. 
 Using a default configuration applicable to a class of use cases in another can cause network outages.
 
-BGP is not Stable
+BGP is Unstable
 
 It has been widely documented that the Default-Free Zone (DFZ), or the global Internet routing table does not converge. See, for instance, Geoff Huston’s measurements in this post: https://www.potaroo.net/ispcol/2022-01/bgpupd2021.html.
 There is a widespread impression that the constant state of convergence in the DFZ is directly attributable to the global number of routes. There is no reason, however, that a routing system with a lot of routes should not converge. Rather, the instability observed in the global routing table is because the rate of change in the global routing table is faster than BGP converges, combined with several BGP-specific policy interactions as well as non uniform tie-breaking across different configurations and implementations. 
